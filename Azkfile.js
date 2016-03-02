@@ -1,8 +1,8 @@
 systems({
   // **************************
-  // cdn-server nginx site
+  // static-server nginx site
   // **************************
-  'cdn-server': {
+  'static-server': {
     image: {'docker': 'nginx'},
     workdir: '/azk/public',
     shell: '/bin/bash',
@@ -25,8 +25,8 @@ systems({
     scalable: { default: 0, limit: 1 },
     wait: 20,
   },
-  'cdn-server-secure': {
-    extends: 'cdn-server',
+  'static-server-secure': {
+    extends: 'static-server',
     mounts: {
       '/azk/scripts': sync('./scripts'),
       '/etc/nginx/conf.d': sync('./nginx-basic-auth'),
@@ -103,7 +103,7 @@ systems({
     envs: {
       GIT_REF: 'master',
       BOX_SIZE: '512mb',
-      AZK_RESTART_COMMAND: 'azk restart -Rvv cdn-server',
+      AZK_RESTART_COMMAND: 'azk restart -Rvv static-server',
     }
   },
   rsync: {

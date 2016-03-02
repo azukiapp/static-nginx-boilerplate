@@ -13,20 +13,22 @@ This is a way to deploy static sites with `nginx` and `azk` in really small mach
 - [x] Add Apache 2.0 licence
 - [x] Add CHANGELOG licence
 - [ ] Add rsync system to deploy files on remote server
+  - [ ] get folder name from deploy `REMOTE_PROJECT_PATH_ID`: like `71b4e7a`
+  - [ ] get IP from deploy `REMOTE_HOST` env: like `104.236.101.211`
 
 ### Start
 
 ```sh
 # start nginx
-azk start cdn-server
+azk start static-server
 # OR: start nginx with basic authentication
-azk start cdn-server-secure
+azk start static-server-secure
 
 # build all to public folder
 ./scripts/build.sh
 ```
 
-- open http://cdn-server.dev.azk.io
+- open http://static-server.dev.azk.io
 
 ---------------
 
