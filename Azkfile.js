@@ -43,16 +43,17 @@ systems({
     provision: [
       'npm install',
       'hexo generate',
-      'rm -rf /azk/public/hexo-blog',
-      'cp -R /azk/sites/hexo-blog/public /azk/public/hexo-blog',
     ],
     workdir: '/azk/sites/hexo-blog',
     command: ['echo', 'build `#{system.name}` ok'],
     mounts: {
+
+      // sync: fast copy all files to inside
       '/azk/sites/hexo-blog': sync('./sites/hexo-blog'),
       '/azk/sites/hexo-blog/node_modules': persistent('hexo-blog_node_modules'),
-      '/azk/sites/hexo-blog/public': path('./sites/hexo-blog/public'),
-      '/azk/public': path('./public'),
+
+      // path: to get `public` files back from inside container
+      '/azk/sites/hexo-blog/public': path('./sites/hexo-blog/public')
     },
     shell: '/bin/bash',
     envs: {
@@ -69,19 +70,20 @@ systems({
     provision: [
       'npm install',
     ],
-    command: ['npm', 'start'],
-    scalable: { default: 0, limit: 1 },
+    command: ['hexo', 'server'],
     http: {
       domains: [
         'hexo-blog.#{azk.default_domain}'
       ]
     },
     ports: {
-      http: '3000/tcp'
+      http: '4000/tcp'
     },
     wait: 20,
     envs: {
-      PORT: '3000'
+      PORT: '4000',
+      NODE_ENV: 'dev',
+      PATH: 'node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
     }
   },
 

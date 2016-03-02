@@ -37,3 +37,13 @@ git commit -m"[Site] Update public"
 # start nginx
 azk deploy
 ```
+
+------------
+
+### Run node site in dev mode
+
+```sh
+azk start hexo-blog-dev
+```
+
+- open http://hexo-blog.dev.azk.io
