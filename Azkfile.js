@@ -106,25 +106,25 @@ systems({
       AZK_RESTART_COMMAND: 'azk restart -Rvv cdn-server',
     }
   },
-  // rsync: {
-  //   image: { docker: 'cloudposse/rsync' },
-  //   mounts: {
-  //     '/azk/public': path('./public'),
-  //     '/azk/deploy/.ssh': path('#{env.HOME}/.ssh'),
-  //     '/azk/deploy/.config': persistent('deploy-config')
-  //   },
-  //   workdir: '/azk/public',
-  //   shell: '/bin/bash',
-  //   // https://www.digitalocean.com/community/tutorials/how-to-copy-files-with-rsync-over-ssh
-  //   command: [
-  //     '/usr/bin/rsync',
-  //     '-avz',
-  //     '-e',
-  //     'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null',
-  //     '--progress',
-  //     '/dev/null',
-  //     'git@104.236.101.211:/tmp/',
-  //   ],
-  //   scalable: { default: 0, limit: 1 }
-  // },
+  rsync: {
+    image: { dockerfile: './Docker' },
+    mounts: {
+      '/azk/sites/hexo-blog/public': path('./sites/hexo-blog/public'),
+      '/azk/public': path('./public'),
+      '/azk/deploy/.ssh': path('#{env.HOME}/.ssh'),
+      '/azk/deploy/.config': persistent('deploy-config'),
+    },
+    workdir: '/azk/public',
+    shell: '/bin/sh',
+    // https://www.digitalocean.com/community/tutorials/how-to-copy-files-with-rsync-over-ssh
+    // command: [
+    //   '/usr/bin/rsync',
+    //   '-avW',
+    //   '--progress',
+    //   '--delete-before',
+    //   './azk/sites/hexo-blog/public/',
+    //   './azk/public/',
+    // ],
+    scalable: { default: 0, limit: 1 }
+  },
 });
