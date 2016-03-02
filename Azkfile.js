@@ -103,7 +103,7 @@ systems({
     envs: {
       GIT_REF: 'master',
       BOX_SIZE: '512mb',
-      AZK_RESTART_COMMAND: 'azk restart -Rvv',
+      AZK_RESTART_COMMAND: 'azk restart -Rvv cdn-server',
     }
   },
 });

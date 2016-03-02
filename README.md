@@ -1,9 +1,17 @@
-# static-nginx-boilerplate [ALPHA version]
+# Static Nginx Boilerplate
 
-# TODO:
+### ALPHA version
 
-- [ ] Add Apache 2.0 licence
-- [ ] Add CHANGELOG licence
+One of the problems of deploying with `azk` on low memory hosts is that `azk` cannot compile files.
+
+> The `npm install` or `bundle install` just exit with strange errors.
+
+This is a way to deploy static sites with `nginx` and `azk` in really small machines. It is just a `nginx` server that serves static files. This is cheap.
+
+### TODO:
+
+- [x] Add Apache 2.0 licence
+- [x] Add CHANGELOG licence
 - [ ] Add rsync system to deploy files on remote server
 
 ### Start
@@ -24,7 +32,7 @@ azk start cdn-server-secure
 
 ### Deploy
 
-> Attention: for now this boilerplate uses git to store public folder. We are planning to add a rsync system to send files directly to destination folder on digital ocean machine.
+> Attention: for now this boilerplate uses `git` to store public folder. We are planning to add a `rsync` system to send files directly to destination folder on `digital ocean` machine.
 
 ```sh
 # build check-users-commands site
