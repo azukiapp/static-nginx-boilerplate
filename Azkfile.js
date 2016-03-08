@@ -25,71 +25,21 @@ systems({
     scalable: { default: 0, limit: 1 },
     wait: 20,
   },
+  // static-server with HTTP Authentication Enabled
   'static-server-secure': {
     extends: 'static-server',
     mounts: {
       '/azk/scripts': sync('./scripts'),
+      // see DEFAULT_USER & DEFAULT_PASSWORD on `.env`
       '/etc/nginx/conf.d': sync('./nginx-basic-auth'),
       '/azk/public': path('./public'),
     },
-    command: ['/azk/scripts/configure-start-nginx.sh'],
-  },
-  // ********************
-  // hexo-blog
-  // ********************
-  'hexo-blog-build': {
-    image: {'docker': 'azukiapp/node'},
-    depends: [],
-    provision: [
-      'npm install',
-      'hexo generate',
-    ],
-    workdir: '/azk/sites/hexo-blog',
-    command: ['echo', 'build `#{system.name}` ok'],
-    mounts: {
-
-      // sync: fast copy all files to inside
-      '/azk/sites/hexo-blog': sync('./sites/hexo-blog'),
-      '/azk/sites/hexo-blog/node_modules': persistent('hexo-blog_node_modules'),
-
-      // path: to get `public` files back from inside container
-      '/azk/sites/hexo-blog/public': path('./sites/hexo-blog/public')
-    },
-    shell: '/bin/bash',
-    envs: {
-      NODE_ENV: 'dev',
-      PATH: 'node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
-    },
-    scalable: { default: 0, limit: 1 },
-    http: null,
-    ports: null,
-    wait: undefined,
-  },
-  'hexo-blog-dev': {
-    extends: 'hexo-blog-build',
-    provision: [
-      'npm install',
-    ],
-    command: ['hexo', 'server'],
-    http: {
-      domains: [
-        'hexo-blog.#{azk.default_domain}'
-      ]
-    },
-    ports: {
-      http: '4000/tcp'
-    },
-    wait: 20,
-    envs: {
-      PORT: '4000',
-      NODE_ENV: 'dev',
-      PATH: 'node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
-    }
+    command: ['/azk/scripts/nginx/nginx-secure-entrypoint.sh'],
   },
 
-  // ********************
-  // deploy
-  // ********************
+  // *****************************
+  // azukiapp/deploy-digitalocean
+  // *****************************
   deploy: {
     // List with all available deployment settings:
     // https://github.com/azukiapp/docker-deploy-digitalocean/blob/master/README.md
@@ -106,25 +56,53 @@ systems({
       AZK_RESTART_COMMAND: 'azk restart -Rvv static-server',
     }
   },
-  rsync: {
+
+  // *****************************
+  // sync local and remote assets
+  // *****************************
+  // sync only local files
+  sync: {
     image: { dockerfile: './Docker' },
     mounts: {
-      '/azk/sites/hexo-blog/public': path('./sites/hexo-blog/public'),
+      // rsync scripts
+      '/azk/scripts': path('./scripts'),
+      // site sources
+      '/azk/sites': sync('./sites'),
+      // public dist static site files
       '/azk/public': path('./public'),
-      '/azk/deploy/.ssh': path('#{env.HOME}/.ssh'),
+      // host ssh keys imported to container
+      '/root/.ssh': path('#{env.HOME}/.ssh'),
+      // FIXME: should get remote IP
       '/azk/deploy/.config': persistent('deploy-config'),
     },
-    workdir: '/azk/public',
+    workdir: '/azk',
     shell: '/bin/sh',
-    // https://www.digitalocean.com/community/tutorials/how-to-copy-files-with-rsync-over-ssh
-    // command: [
-    //   '/usr/bin/rsync',
-    //   '-avW',
-    //   '--progress',
-    //   '--delete-before',
-    //   './azk/sites/hexo-blog/public/',
-    //   './azk/public/',
-    // ],
+    provision: [
+      'sh /azk/scripts/rsync/local.sh'
+    ],
+    command: ['echo', 'SYNC OK'],
     scalable: { default: 0, limit: 1 }
+  },
+  // sync local files and then deploy to remote server
+  'sync-deploy': {
+    extends: 'sync',
+    provision: [
+      'sh /azk/scripts/rsync/local.sh',
+      'sh /azk/scripts/rsync/deploy.sh',
+    ],
+  },
+  // sync and watch local files
+  'watch': {
+    extends: 'sync',
+    provision: [
+      'sh /azk/scripts/rsync/watch/local-watch.sh'
+    ],
+  },
+  // sync and watch local files and then deploy to remote server
+  'watch': {
+    extends: 'sync',
+    provision: [
+      'sh /azk/scripts/rsync/watch/deploy-watch.sh'
+    ],
   },
 });

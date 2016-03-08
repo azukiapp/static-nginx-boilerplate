@@ -1,0 +1,456 @@
+<!-- from: http://mylittlerapture.com/three.js/Infinite_city.html -->
+
+<head>
+	<style>
+		html, body {
+			width: 100%;
+			height: 100%;
+		}
+
+		body {
+			background-color: #ffffff;
+			margin: 0;
+			overflow: hidden;
+			font-family: arial;
+		}
+
+		a:link {
+		    color: #ffffff;
+		}
+
+		/* visited link */
+		a:visited {
+		    color: #ffffff;
+		}
+
+		/* mouse over link */
+		a:hover {
+		    color: #ffffff;
+		}
+
+		/* selected link */
+		a:active {
+		    color: #ffffff;
+		}
+
+		#blocker {
+
+			position: absolute;
+
+			width: 100%;
+			height: 100%;
+
+			background-color: rgba(0,0,0,0.5);
+
+		}
+
+		#info {
+
+			position: fixed;
+
+			width: 150px;
+			height: 110px;
+			right:0;
+			bottom:0;
+			padding: 10px;
+
+			color: #ffffff;
+			text-align: left;
+
+			background-color: rgba(0,0,0,0.5);
+
+		}
+
+		#links {
+			position: fixed;
+
+			width: 100%;
+			height: 50px;
+			right:0;
+			top:0;
+			padding: 10px;
+			font-size: 10px;
+
+			color: #ffffff;
+			text-align: center;
+		}
+
+		#chromeexperiments {
+			position: fixed;
+
+			width: 160px;
+			height: 92px;
+			left:0;
+			bottom:0;
+			padding: 10px;
+			font-size: 10px;
+
+			color: #ffffff;
+			text-align: center;
+		}
+
+		#instructions {
+
+			width: 100%;
+			height: 100%;
+
+			display: -webkit-box;
+			display: -moz-box;
+			display: box;
+
+			-webkit-box-orient: horizontal;
+			-moz-box-orient: horizontal;
+			box-orient: horizontal;
+
+			-webkit-box-pack: center;
+			-moz-box-pack: center;
+			box-pack: center;
+
+			-webkit-box-align: center;
+			-moz-box-align: center;
+			box-align: center;
+
+			color: #ffffff;
+			text-align: center;
+
+			cursor: pointer;
+
+		}
+	</style>
+</head>
+
+<script type="text/javascript" src="jquery.min.js"></script>
+<script src="three.js"></script>
+<script src="stats.min.js"></script>
+<script src="dat.gui.min.js"></script>
+<script src="City_generator.js"></script>
+<script src="threex.dynamictexture.js"></script>
+<script src="PointerLockControls.js"></script>
+
+<body style="background:#000">
+	<div id="blocker">
+		<div id="links">
+			<a href="http://mylittlerapture.com/">Back to the rapture</a>&nbsp;&nbsp;&nbsp;
+			<a href="http://www.youtube.com/watch?v=ExTJ9NP5L1g">Video version</a>&nbsp;&nbsp;&nbsp;
+			<a href="view-source:http://mylittlerapture.com/three.js/Infinite_city.html">View source</a>
+		</div>
+
+		<div id="chromeexperiments">
+			<a href="https://www.chromeexperiments.com/experiment/infinite-city/"><img src="../img/ce.png" alt="See my Experiment on ChromeExperiments.com" /></a>
+		</div>
+
+		<div id="instructions">
+			<span style="font-size:40px">Click to play</span>
+			<br />
+			MOUSE = Look around
+			<br />
+			W / S / A / D / Q / E = Move forward / back / left / right / down / up
+		</div>
+	</div>
+
+
+	<div id="info"></div>
+	<div id="Stats-output"></div>
+	<div id="WebGL-output" style="background: #000; color: #0FF;"></div>
+</body>
+
+<!--SKY SHADER-->
+<script type="x-shader/x-vertex" id="vertexShader">
+	varying vec3 vWorldPosition;
+	void main() {
+		vec4 worldPosition =  vec4( position, 1.0 );
+		vWorldPosition = worldPosition.xyz;
+		gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+	}
+</script>
+
+<script type="x-shader/x-fragment" id="fragmentShader">
+	uniform vec3 topColor;
+	uniform vec3 middleColor;
+	uniform vec3 bottomColor;
+	uniform float offset;
+	uniform float exponent;
+	varying vec3 vWorldPosition;
+
+	float rand(vec2 co);
+
+	void main() {
+		float h = (vWorldPosition.y/1000.0 - 0.1) * 8.0;
+		vec3 fg = mix( middleColor, topColor, max( pow( max( h, 0.0), 0.8 ), 0.0 ) );
+		h = vWorldPosition.y/1000.0*2.0;
+		gl_FragColor = vec4( mix( bottomColor, fg, max( pow( max( h , 0.0), 0.8 ), 0.0 ) ), 1.0 );
+	}
+
+	float rand(vec2 co){
+	    return fract(sin(dot(co.xy,vec2(12.9898,78.233))) * 43758.5453);
+	}
+</script>
+
+<!--BUILDINGS SHADER-->
+<script id="mat_vertShader" type="x-shader/x-vertex">
+	attribute float shift_;
+	attribute vec2 scale_;
+
+	varying vec2 textureCoord;
+	varying vec3 vWorldPosition;
+	varying vec3 nWorldPosition;
+	varying vec3 vNormal;
+	varying vec3 nNormal;
+
+	varying float shift;
+	varying vec2 scale;
+
+
+    void main() {
+    	if (scale_!=vec2(0.0,0.0)){
+	    	shift = shift_;
+	    	scale = scale_;
+	    }
+	    else{
+	    	shift = 0.0;
+	    	scale = vec2(1.0,1.0);
+	    }
+
+    	vec4 worldPosition =  vec4(position, 1.0 );
+		vWorldPosition = worldPosition.xyz;
+
+		worldPosition =  modelViewMatrix * vec4(position, 1.0 );
+		nWorldPosition = worldPosition.xyz;
+
+		vNormal = normal;
+		nNormal = normalize(normalMatrix  * normal);
+
+
+		textureCoord = uv;
+
+        gl_Position =   projectionMatrix *
+                        modelViewMatrix *
+                        vec4(position,1.0);
+
+    }
+</script>
+
+<script id="mat_fragShader" type="x-shader/x-fragment">
+	const int max_tex_ind = 3;
+	const float light_height = 8.0;
+
+	varying vec2 textureCoord;
+	varying vec3 vWorldPosition;
+	varying vec3 nWorldPosition;
+	varying vec3 vNormal;
+	varying vec3 nNormal;
+
+	varying float shift;
+	varying vec2 scale;
+
+
+	uniform sampler2D 	a_texture [max_tex_ind];
+	uniform sampler2D 	a_phong_tex [max_tex_ind];
+	uniform vec2 		a_steps [max_tex_ind];
+
+	uniform sampler2D light_tex;
+	uniform vec2 light_offset;
+
+	uniform vec3 l_fogColor;
+	uniform vec3 m_fogColor;
+	uniform vec3 h_fogColor;
+	uniform vec3 l_Color;
+	uniform vec3 camPos;
+	uniform vec2 offset;
+
+	uniform float fog;
+
+	float v_rand(vec2 co);
+	float rand(float seed);
+
+    void main() {
+		vec2 uv;
+    	vec2 vUv;
+		vec2 scl;
+		float sft;
+		scl.x = floor(scale.x*10.0+0.5)/10.0;
+		scl.y = floor(scale.y*10.0+0.5)/10.0;
+		sft = floor(shift+0.5);
+
+    	if (vWorldPosition.y>0.1)
+    		vUv = vec2(textureCoord.x, vWorldPosition.y/10.0/scl.y);
+    	else
+    		vUv = vec2(textureCoord.x, textureCoord.y);
+
+		vec3 PhongColor;
+		vec3 TexBaseColor;
+		vec2 steps;
+		float r;
+		float g;
+		float b;
+
+
+
+		int num = int(rand(sft+94.2)*float(max_tex_ind));
+		if (a_steps[0] == vec2(1.0,1.0))
+			num = 0;
+
+    	for (int i = 0; i < max_tex_ind; i++) {
+	    	if (i == num) {
+	    		steps = a_steps[i];
+
+
+	    		float x = floor(vUv.x*steps.x*scl.x);
+		    	float y = floor(vUv.y*steps.y*scl.y);
+		    	float r_x = floor(v_rand(vec2(y+sft*scl.y,x-sft*scl.x))*steps.x);
+		    	float r_y = floor(v_rand(vec2(y+sft*scl.y,y-sft*scl.y))*steps.y);
+
+		    	if (mod(r_x,steps.x)==0.0 && mod(r_y,steps.y)==0.0)
+		    		r_x = steps.x-1.0;
+
+		    	if (y<2.0 && fog>0.0) {
+			    	r_x = 0.0;
+			    	r_y = 0.0;
+			    }
+
+			    if (x == 0.0 || x == steps.x*scl.x-1.0 || y == steps.y*scl.y-1.0) {
+			    	r_x = 0.0;
+			    	r_y = 0.0;
+			    }
+
+			    //if (x > 20.0)
+			    float rm = floor(v_rand(vec2(scl.x,33.0))*97.0+3.0);
+				if (mod(x,floor(steps.x*scl.x/floor(steps.x*scl.x/rm))) == 0.0) {
+			    	r_x = 0.0;
+			    	r_y = 0.0;
+			    }
+
+			    if (r_x!=0.0 && r_y!=0.0 && v_rand(vec2(x+sft*100.0,y-sft*300.0))*0.4<v_rand(vec2(sft*523.0,-sft*112.0)) ) {
+			    	r_x = 1.0;
+			    	r_y = 0.0;
+			    }
+
+			    uv.x = (mod(vUv.x*steps.x*scl.x,1.0)+r_x)/steps.x/scl.x;
+		    	uv.y = (mod(vUv.y*steps.y*scl.y,1.0)+r_y)/steps.y/scl.y;
+
+				r = v_rand(vec2(x+11.0,y)) *0.25 + 0.75;
+				g = v_rand(vec2(-y-6.0,x)) *0.25 + 0.75;
+				b = v_rand(vec2(y+x,-3.0)) *0.35 + 0.65;
+
+				PhongColor = texture2D(a_phong_tex[i],uv * scl).xyz;
+
+			    vec3 t_p =  texture2D(a_texture[i],uv * scl).xyz ;
+			    TexBaseColor = t_p * vec3(r,g,b) * min(1.0*min(vWorldPosition.y/5.0,1.0) + PhongColor,1.0);
+	    	}
+	    }
+
+	    float col;
+	    float col_y = 0.05/scale.y;
+	    float col_x = 0.05/scale.x;
+
+	    r = rand(sft*21.2) *0.7+0.3;
+		g = rand(sft-24.8) *0.7+0.3;
+		b = rand(sft+1.61) *0.7+0.3;
+
+	    if (rand(sft-7.2)<0.3){
+		    if (vUv.y>1.0-col_y && vUv.y<1.0-col_y/2.0) {
+		    	float glow = 1.0-(vUv.y - (1.0-col_y))*scale.y*8.0*10.0;
+		    	glow = 1.0 - abs(glow);
+		    	TexBaseColor += vec3(glow,glow,glow)*1.0*min(vWorldPosition.y/5.0,1.0)* vec3(r,g,b);
+		    }
+		}
+
+	    if (rand(sft-7.2)<0.15){
+	    	float style = 1.0;
+	    	style = pow((sin(vUv.y*scale.y*rand(sft)*30.0)+1.0)/2.0,0.5);
+		    if (vUv.x>1.0-col_x/2.0 && vUv.y<1.0-col_y/2.0-col_y/4.0) {
+		    	float glow = 1.0-(vUv.x - (1.0-col_x/2.0))*scale.x*4.0*10.0;
+		    	glow = 1.0 - abs(glow);
+		    	TexBaseColor += vec3(glow,glow,glow)*1.5*min(vWorldPosition.y/5.0,1.0)* vec3(r,g,b)*style;
+		    }
+
+		    if (vUv.x<col_x/2.0 && vUv.y<1.0-col_y/2.0-col_y/4.0) {
+		    	float glow = 1.0-(vUv.x - (-col_x/2.0))*scale.x*4.0*10.0;
+		    	glow = 1.0 - abs(glow);
+		    	TexBaseColor += vec3(glow,glow,glow)*1.5*min(vWorldPosition.y/5.0,1.0)* vec3(r,g,b)*style;
+		    }
+		}
+
+
+		r = rand(sft*53.2) *0.7+0.3;
+		g = rand(sft-12.9) *0.7+0.3;
+		b = rand(sft+8.65) *0.7+0.3;
+
+		TexBaseColor = TexBaseColor + vec3(r,g,b) * 0.02;
+
+	    r = v_rand(vec2(scl.x,22233.0)) *0.15 + 0.85;
+		g = v_rand(vec2(-53.0,scl.y)) *0.15 + 0.85;
+		b = v_rand(vec2(scl.y,scl.x)) *0.25 + 0.75;
+
+		TexBaseColor = TexBaseColor * vec3(r,g,b);
+
+	    vec3 camFrag = vWorldPosition - camPos;
+	    float distance = length(vWorldPosition - camPos);
+
+		vec3 L = normalize(vec3(0.0,light_height,0.0) - nWorldPosition);
+   		float ints =  clamp(dot(nNormal,L), 0.0,1.0);
+   		TexBaseColor = TexBaseColor * (pow(ints,2.0)*0.7+0.3);
+		float glow = length(TexBaseColor)/sqrt(3.0);
+
+	    float fogAmount = min(pow(min(1.0,(distance+500.0)/(740.0+500.0)),8.0) * (1.5-glow),1.0);
+
+	    float h = (vWorldPosition.y/1000.0 - 0.1) * 8.0;
+		vec3 fg = mix( m_fogColor, h_fogColor, max( pow( max( h, 0.0), 0.8 ), 0.0 ) );
+		h = vWorldPosition.y/1000.0*2.0;
+		vec3 fogColor = mix( l_fogColor, fg, max( pow( max( h , 0.0), 0.8 ), 0.0 ) );
+
+	    float sc = 1.0+pow((length(fogColor)-length(l_fogColor))*3.0,3.0);
+
+	    vec3 tex = TexBaseColor+ l_Color*pow(ints,1.0)* (length(PhongColor)*0.4+0.05*min(vWorldPosition.y/5.0,1.0));//+0.15
+
+	    //street lights
+		vec3 LC;
+		float pw;
+		float nx;
+
+	    LC = texture2D(light_tex,(vWorldPosition.xz-light_offset)/2048.0+0.5).xyz;
+	   	pw = pow(max(max(LC.x,LC.y),LC.z),6.0);
+	   	LC = (LC*pw + LC*ints)*0.05 + (LC*pw*PhongColor + LC*PhongColor*pow(ints,3.0))*0.95;
+	   	tex = mix(tex+LC, tex, min(pow(min(abs(vWorldPosition.y-light_height)*0.1,1.0),0.5) + fogAmount*0.5,1.0));
+
+	    vec3 res = mix(tex, fogColor * max(TexBaseColor,fog)* sc, fogAmount );
+	    gl_FragColor = vec4(res, 1.0);
+    }
+
+    float v_rand(vec2 co){
+	    return fract(sin(dot(co.xy,vec2(12.7,78.1))) * 10000.3);
+	}
+
+	float rand(float seed) {
+		float x = sin(seed) * 10000.0;
+		return fract(x);
+	}
+</script>
+
+<!--GLOWS SHADER-->
+<script id="part_vertShader" type="x-shader/x-vertex">
+	attribute float size;
+	attribute vec3 col;
+	varying vec3 vColor;
+	varying vec2 pos;
+	void main() {
+		vColor = col;
+		vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+		gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );
+		gl_Position = projectionMatrix * mvPosition;
+	}
+</script>
+
+<script id="part_fragShader" type="x-shader/x-fragment">
+	uniform vec3 color;
+	uniform sampler2D texture;
+	varying vec3 vColor;
+	varying vec2 pos;
+
+	void main() {
+		vec3 res = texture2D( texture,gl_PointCoord).xyz * vColor;
+		gl_FragColor = vec4(res,1.0);
+	}
+</script>
+
+<script type="text/javascript" src="Script.js"></script>

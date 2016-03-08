@@ -1,34 +1,29 @@
 # Static Nginx Boilerplate
 
-### ALPHA version
+### (0.2.1) BETA version
 
-One of the problems of deploying with `azk` on low memory hosts is that `azk` cannot compile files.
-
-> The `npm install` or `bundle install` just exit with strange errors.
+One of the problems of deploying with `azk` on low memory hosts is that `azk` sometimes get errors compiling: `npm install` just exit with strange errors related to memory issues.
 
 This is a way to deploy static sites with `nginx` and `azk` in really small machines. It is just a `nginx` server that serves static files. This is cheap.
-
-### TODO:
-
-- [x] Add Apache 2.0 licence
-- [x] Add CHANGELOG licence
-- [ ] Add rsync system to deploy files on remote server
-  - [ ] get folder name from deploy `REMOTE_PROJECT_PATH_ID`: like `71b4e7a`
-  - [ ] get IP from deploy `REMOTE_HOST` env: like `104.236.101.211`
 
 ### Start
 
 ```sh
 # start nginx
-azk start static-server
-# OR: start nginx with basic authentication
-azk start static-server-secure
+azk start static-server        # public server
 
-# build all to public folder
+# build all
 ./scripts/build.sh
+
+# sync public files
+azk start sync -Rv
 ```
 
 - open http://static-server.dev.azk.io
+
+> If you want to use HTTP basic authentication you can start system bellow
+> `azk start static-server-secure`
+
 
 ---------------
 

@@ -1,11 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 
 set -o verbose
 
-. ./scripts/rsync/local.sh
-
 # send files to server
-/usr/bin/rsync -avW -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+. ./scripts/onchange.sh /usr/bin/rsync -avW -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
                --progress \
                --delete-before \
                ./public/ \
