@@ -1,0 +1,137 @@
+#container {
+  @include absolute(0);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  > canvas {
+    opacity: 0;
+    transition: opacity 500ms 200ms;
+
+    &.active {
+      opacity: 1;
+    }
+  }
+}
+
+#container-controls {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  bottom: 10px;
+  opacity: 0;
+  transition: opacity 500ms 300ms;
+
+  &.active {
+    opacity: 1;
+  }
+}
+
+#container-graphs {
+  position: absolute;
+  right: 0;
+  bottom: 30px;
+}
+
+#container-stats {
+  position: absolute;
+  z-index: 1;
+  right: 20px;
+  bottom: 20px;
+}
+
+.info-modal {
+  h1 {
+    margin: 4px 0 8px;
+
+    &:after {
+      display: block;
+      content: "-------";
+    }
+  }
+
+  dl {
+    display: block;
+    margin: 4px 0;
+  }
+
+  dt {
+    color: #e9e9e9;
+    display: inline-block;
+    opacity: 0.5;
+
+    &:after {
+      display: inline-block;
+      padding: 0 4px;
+      color: #e30060;
+      content: "/";
+    }
+  }
+
+  dd {
+    display: inline-block;
+    color: #fff;
+  }
+
+  a {
+    position: relative;
+    display: inline-block;
+    color: #fff;
+    text-decoration: none;
+
+    &:after {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      border-bottom: 1px solid #fff;
+      opacity: 0.25;
+      content: "";
+    }
+
+    &:hover:after {
+      opacity: 1;
+    }
+  }
+}
+
+.info-section {
+  margin: 12px 0 0;
+}
+
+.stats-panel {
+  color: #fff;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 200ms;
+
+  dl {
+    display: inline-block;
+
+    &:not(:last-child):after {
+      display: inline-block;
+      padding: 0 4px;
+      color: #e30060;
+      content: "/";
+    }
+  }
+
+  dt {
+    display: inline-block;
+
+    &:after {
+      display: inline-block;
+      padding: 0 0 0 2px;
+      content: ":";
+    }
+  }
+
+  dd {
+    display: inline-block;
+  }
+
+  .show-info & {
+    opacity: 1;
+    visibility: visible;
+  }
+}

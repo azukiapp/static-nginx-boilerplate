@@ -1,0 +1,13 @@
+{
+  "name": "particulate-medusae",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "handlebars": "~4.0.5",
+    "native-promise-only": "~0.8.0-a",
+    "noise": "josephg/noisejs",
+    "particulate": "~0.3.2",
+    "qunit": "~1.18.0",
+    "red-sass": "~0.2.0"
+  }
+}

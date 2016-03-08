@@ -105,4 +105,27 @@ systems({
       'sh /azk/scripts/rsync/watch/deploy-watch.sh'
     ],
   },
+
+  // **********************
+  // aditional static site
+  // **********************
+  // node example
+  'particulate-medusae': {
+    depends: [],
+    image: { docker: 'azukiapp/node' },
+    provision: [
+      'npm install',
+      'npm install grunt-cli',
+      './node_modules/.bin/bower i --allow-root',
+      './node_modules/.bin/grunt',
+    ],
+    workdir: '/azk/#{system.name}',
+    shell: '/bin/bash',
+    command: ['echo', 'Build OK'],
+    mounts: {
+      '/azk/#{system.name}': path('./sites/particulate-medusae'),
+      '/azk/#{system.name}/node_modules': persistent('#{system.name}_node_modules'),
+    },
+    scalable: { default: 0 },
+  },
 });
